@@ -1,0 +1,38 @@
+{
+  "project": "project-01",
+  "description": "Baseline Electron knowledge base with explicit harness (AGENTS.md, init.sh, feature_list.json, claude-progress.md)",
+  "features": [
+    {
+      "id": "window-launch",
+      "name": "Window Launch",
+      "description": "Electron app opens a BrowserWindow with correct dimensions and preload script",
+      "status": "pass",
+      "evidence": "npm run build succeeds; launching `electron .` spawns main + renderer + GPU + network processes with no startup error (verified via `ps aux` and log inspection). BrowserWindow is created at 1200x800 with contextIsolation=true and nodeIntegration=false in src/main/main.ts.",
+      "testedAt": "2026-07-12T05:37:00Z"
+    },
+    {
+      "id": "document-list",
+      "name": "Document List Panel",
+      "description": "Left sidebar shows imported documents with empty state message",
+      "status": "pass",
+      "evidence": "DocumentList component (src/renderer/components/DocumentList.tsx) renders 'No documents yet...' when the list is empty, and document cards otherwise. Verified DocumentService.list() directly: returns [] on a fresh data directory, and returns the correct entry after a .md file is added to <userData>/knowledge-base-data/documents.",
+      "testedAt": "2026-07-12T05:40:00Z"
+    },
+    {
+      "id": "question-panel",
+      "name": "Question Panel",
+      "description": "Bottom input bar accepts questions and submits via IPC",
+      "status": "pass",
+      "evidence": "QuestionPanel (src/renderer/components/QuestionPanel.tsx) renders a text input and Ask button, calls window.knowledgeBase.qa.ask on Enter or click. Verified QaService.ask() directly: given a sample document and a question, returns the top matching paragraphs sorted by keyword-overlap score.",
+      "testedAt": "2026-07-12T05:40:00Z"
+    },
+    {
+      "id": "data-directory",
+      "name": "Data Directory",
+      "description": "PersistenceService creates and manages userData/knowledge-base-data directory",
+      "status": "pass",
+      "evidence": "PersistenceService constructor calls ensureDirectories(). Verified on disk after launching the app: <userData>/knowledge-base-data/documents and <userData>/knowledge-base-data/index were both created.",
+      "testedAt": "2026-07-12T05:38:00Z"
+    }
+  ]
+}
