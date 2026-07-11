@@ -31,80 +31,80 @@ npm install
 ### Agent 전체 작업 순서
 
 1. `task-prompt.md` 읽음
-   a. 내용은 "Build an Electron app that can show documents and answer questions" 한 줄뿐이었음
-   b. 사용자가 "다른 파일을 절대 참고하지 말 것"으로 지시했기 때문에, 이 파일 외의 다른 파일은 이후 과정에서 전혀 읽지 않음
+   - 내용은 "Build an Electron app that can show documents and answer questions" 한 줄뿐이었음
+   - 사용자가 "다른 파일을 절대 참고하지 말 것"으로 지시했기 때문에, 이 파일 외의 다른 파일은 이후 과정에서 전혀 읽지 않음
 
 2. `find . -maxdepth 4 -not -path '*/node_modules/*' -not -path '*/.git/*' | sort`
-   a. node_modules·git 내부는 제외하고 4단계 깊이까지 파일 목록을 정렬해서 확인
-   b. 결과: `task-prompt.md` 하나만 존재 → 기존 코드나 뼈대(스캐폴드) 없이 완전히 빈 프로젝트였다는 걸 확인
+   - node_modules·git 내부는 제외하고 4단계 깊이까지 파일 목록을 정렬해서 확인
+   - 결과: `task-prompt.md` 하나만 존재 → 기존 코드나 뼈대(스캐폴드) 없이 완전히 빈 프로젝트였다는 걸 확인
 
 3. `node -v && npm -v`
-   a. Node.js와 npm 버전을 확인
-   b. 결과: Node.js v24.12.0, npm 11.6.2
+   - Node.js와 npm 버전을 확인
+   - 결과: Node.js v24.12.0, npm 11.6.2
 
 4. `mkdir -p src/renderer data`
-   a. 화면을 그리는 코드(renderer)를 담을 폴더와 문서 데이터를 담을 폴더 생성
+   - 화면을 그리는 코드(renderer)를 담을 폴더와 문서 데이터를 담을 폴더 생성
 
 5. `package.json` 작성
-   a. 이 프로젝트가 Electron 앱이라는 것, 실행 진입점(`src/main.js`), 필요한 패키지(`electron`) 정의
+   - 이 프로젝트가 Electron 앱이라는 것, 실행 진입점(`src/main.js`), 필요한 패키지(`electron`) 정의
 
 6. `src/main.js` 작성
-   a. 메인 프로세스(창을 만들고 파일 시스템 접근 같은 시스템 권한을 갖는 뒷단 프로그램) 코드 작성
-   b. `app.whenReady().then(() => createWindow())`로 앱 실행 시 창 띄우기 구현
-   c. `fs.readdirSync(DATA_DIR)`로 `data/` 폴더의 `.md`/`.txt` 문서 목록을 읽는 `listDocuments()` 구현
-   d. 질문 단어와 문서 문단이 겹치는 개수로 점수를 매겨 상위 3개를 돌려주는 `answerQuestion()` 구현
-   e. `ipcMain.handle('documents:list', ...)`, `ipcMain.handle('documents:read', ...)`, `ipcMain.handle('qa:ask', ...)`로 화면(렌더러)과의 통신 채널(IPC) 3개 등록
+   - 메인 프로세스(창을 만들고 파일 시스템 접근 같은 시스템 권한을 갖는 뒷단 프로그램) 코드 작성
+   - `app.whenReady().then(() => createWindow())`로 앱 실행 시 창 띄우기 구현
+   - `fs.readdirSync(DATA_DIR)`로 `data/` 폴더의 `.md`/`.txt` 문서 목록을 읽는 `listDocuments()` 구현
+   - 질문 단어와 문서 문단이 겹치는 개수로 점수를 매겨 상위 3개를 돌려주는 `answerQuestion()` 구현
+   - `ipcMain.handle('documents:list', ...)`, `ipcMain.handle('documents:read', ...)`, `ipcMain.handle('qa:ask', ...)`로 화면(렌더러)과의 통신 채널(IPC) 3개 등록
 
 7. `src/preload.js` 작성
-   a. `contextBridge.exposeInMainWorld('api', {...})`로, 화면 쪽에서 `window.api.listDocuments()`, `window.api.readDocument()`, `window.api.askQuestion()` 세 개만 제한적으로 쓸 수 있게 열어줌
+   - `contextBridge.exposeInMainWorld('api', {...})`로, 화면 쪽에서 `window.api.listDocuments()`, `window.api.readDocument()`, `window.api.askQuestion()` 세 개만 제한적으로 쓸 수 있게 열어줌
 
 8. `src/renderer/index.html` 작성
-   a. 좌측 문서 목록 패널, 중앙 문서 뷰어(`<pre id="doc-body">`), 하단 질문/답변 패널(`<form id="qa-form">`) 레이아웃 작성
+   - 좌측 문서 목록 패널, 중앙 문서 뷰어(`<pre id="doc-body">`), 하단 질문/답변 패널(`<form id="qa-form">`) 레이아웃 작성
 
 9. `src/renderer/renderer.js` 작성
-   a. `loadDocumentList()`로 문서 목록을 불러와 클릭 시 `openDocument()`로 본문을 보여주는 로직 작성
-   b. `qaForm.addEventListener('submit', ...)`로 질문 제출 시 `window.api.askQuestion()`을 호출해 결과를 카드로 렌더링하는 로직 작성
+   - `loadDocumentList()`로 문서 목록을 불러와 클릭 시 `openDocument()`로 본문을 보여주는 로직 작성
+   - `qaForm.addEventListener('submit', ...)`로 질문 제출 시 `window.api.askQuestion()`을 호출해 결과를 카드로 렌더링하는 로직 작성
 
 10. `src/renderer/styles.css` 작성
-    a. 레이아웃 색/여백 등 디자인 작성
+    - 레이아웃 색/여백 등 디자인 작성
 
 11. `data/welcome.md` 작성
-    a. 앱이 읽어들일 샘플 문서 1 작성
+    - 앱이 읽어들일 샘플 문서 1 작성
 
 12. `data/sample-notes.md` 작성
-    a. 앱이 읽어들일 샘플 문서 2 작성
+    - 앱이 읽어들일 샘플 문서 2 작성
 
 13. `npm install`
-    a. `package.json`에 적어둔 `electron` 패키지를 실제로 내려받아 설치 (70개 패키지 설치됨)
+    - `package.json`에 적어둔 `electron` 패키지를 실제로 내려받아 설치 (70개 패키지 설치됨)
 
 14. `node --check src/main.js && node --check src/preload.js && node --check src/renderer/renderer.js && echo "syntax OK"`
-    a. 코드를 실제로 실행하지 않고 문법 오류만 빠르게 확인
-    b. 결과: `syntax OK`, 문제 없음
+    - 코드를 실제로 실행하지 않고 문법 오류만 빠르게 확인
+    - 결과: `syntax OK`, 문제 없음
 
 15. `(timeout 6 npx electron . > /tmp/electron-run.log 2>&1 || true); cat /tmp/electron-run.log`
-    a. Electron 앱이 크래시 없이 뜨는지 6초만 실행해보고 로그를 확인하려던 시도
-    b. 에러 1 발견: `(eval):1: command not found: timeout`
-    c. 원인: macOS 기본 zsh 환경에는 GNU coreutils의 `timeout` 명령어가 기본 설치돼 있지 않음
-    d. 수정 방향: `timeout` 대신 백그라운드 실행 + `sleep` + `pkill` 조합으로 전략 변경
+    - Electron 앱이 크래시 없이 뜨는지 6초만 실행해보고 로그를 확인하려던 시도
+    - 에러 1 발견: `(eval):1: command not found: timeout`
+    - 원인: macOS 기본 zsh 환경에는 GNU coreutils의 `timeout` 명령어가 기본 설치돼 있지 않음
+    - 수정 방향: `timeout` 대신 백그라운드 실행 + `sleep` + `pkill` 조합으로 전략 변경
 
 16. `(npx electron . > /tmp/electron-run.log 2>&1 &) ; sleep 4; pkill -f "electron ." 2>/dev/null; sleep 1; cat /tmp/electron-run.log`
-    a. 앱을 백그라운드로 띄운 뒤 4초 후 강제 종료해서 정상 기동 여부만 확인하려던 재시도
-    b. 에러 2 발견:
+    - 앱을 백그라운드로 띄운 뒤 4초 후 강제 종료해서 정상 기동 여부만 확인하려던 재시도
+    - 에러 2 발견:
        ```
        TypeError: Cannot read properties of undefined (reading 'whenReady')
            at Object.<anonymous> (/Users/.../src/main.js:21:5)
            ...
        Node.js v20.18.0
        ```
-    c. 로그 맨 끝의 `Node.js v20.18.0` 출력을 보고, Electron 전용 실행 파일이 아니라 일반 Node.js로 실행되고 있다는 신호로 판단
+    - 로그 맨 끝의 `Node.js v20.18.0` 출력을 보고, Electron 전용 실행 파일이 아니라 일반 Node.js로 실행되고 있다는 신호로 판단
 
 17. `ls node_modules/electron/dist 2>/dev/null | head -20; echo "---"; cat node_modules/electron/package.json | grep version; echo "---env---"; echo "ELECTRON_RUN_AS_NODE=$ELECTRON_RUN_AS_NODE"`
-    a. 16번 에러의 원인을 좁히기 위해 Electron 바이너리 설치 상태와 환경변수를 직접 확인
-    b. 결과: Electron 바이너리(버전 31.7.7)는 정상 설치돼 있었지만, 샌드박스 환경에 `ELECTRON_RUN_AS_NODE=1`이 기본 설정돼 있어서 Electron이 일반 Node.js처럼 동작하고 있었던 것을 확인 → 내 코드 버그가 아니라 실행 환경 제약이었음
+    - 16번 에러의 원인을 좁히기 위해 Electron 바이너리 설치 상태와 환경변수를 직접 확인
+    - 결과: Electron 바이너리(버전 31.7.7)는 정상 설치돼 있었지만, 샌드박스 환경에 `ELECTRON_RUN_AS_NODE=1`이 기본 설정돼 있어서 Electron이 일반 Node.js처럼 동작하고 있었던 것을 확인 → 내 코드 버그가 아니라 실행 환경 제약이었음
 
 18. `(env -u ELECTRON_RUN_AS_NODE npx electron . > /tmp/electron-run2.log 2>&1 &) ; sleep 4; pkill -f "Electron.app" 2>/dev/null; pkill -f "electron ." 2>/dev/null; sleep 1; cat /tmp/electron-run2.log`
-    a. 17번에서 찾은 환경변수만 제거하고 같은 방식으로 재실행해서 해결됐는지 검증
-    b. 결과: `Electron exited with signal SIGTERM`만 로그에 남고 `TypeError`는 발생하지 않음 → 창이 정상적으로 뜬 채 유지되다가 내가 보낸 종료 신호로 꺼졌다는 뜻 → 창 시작(window startup) 로직 정상 동작 최종 확인
+    - 17번에서 찾은 환경변수만 제거하고 같은 방식으로 재실행해서 해결됐는지 검증
+    - 결과: `Electron exited with signal SIGTERM`만 로그에 남고 `TypeError`는 발생하지 않음 → 창이 정상적으로 뜬 채 유지되다가 내가 보낸 종료 신호로 꺼졌다는 뜻 → 창 시작(window startup) 로직 정상 동작 최종 확인
 
 ### Features
 
@@ -172,212 +172,212 @@ npm install
 ### Agent 전체 작업 순서
 
 1. `learn-harness-engineering/projects/project-01/solution/AGENTS.md` 읽음
-   a. 검증: 시작 전에 뭘 지켜야 하는지(4계층 경계, TS strict, IPC_CHANNELS 위치, Definition of Done 5가지)를 파악
-   b. 의도: AGENTS.md 자체가 "명시적 컨벤션이 없을 때" 실패를 막는 파일이므로, 코드를 한 줄도 쓰기 전에 이걸 먼저 읽어서 임의로 구조를 짜지 않으려는 의도
-   c. Layer: **Context Provision**
+   - 검증: 시작 전에 뭘 지켜야 하는지(4계층 경계, TS strict, IPC_CHANNELS 위치, Definition of Done 5가지)를 파악
+   - 의도: AGENTS.md 자체가 "명시적 컨벤션이 없을 때" 실패를 막는 파일이므로, 코드를 한 줄도 쓰기 전에 이걸 먼저 읽어서 임의로 구조를 짜지 않으려는 의도
+   - Layer: **Context Provision**
 
 2. `learn-harness-engineering/projects/project-01/solution/init.sh` 읽음
-   a. 검증: `npm install → npm run check → npm run build` 3단계가 전부 통과해야 한다는 제약 확인
-   b. 의도: 내가 만들 `package.json`의 스크립트 이름(`check`, `build`)을 이 파일이 요구하는 이름과 정확히 맞추기 위해 미리 확인
-   c. Layer: **Execution Environment**
+   - 검증: `npm install → npm run check → npm run build` 3단계가 전부 통과해야 한다는 제약 확인
+   - 의도: 내가 만들 `package.json`의 스크립트 이름(`check`, `build`)을 이 파일이 요구하는 이름과 정확히 맞추기 위해 미리 확인
+   - Layer: **Execution Environment**
 
 3. `learn-harness-engineering/projects/project-01/solution/feature_list.json` 읽음
-   a. 검증: 만들어야 할 4개 feature의 정확한 정의와, evidence 문구에 있는 실제 API 이름(`window.knowledgeBase.qa.ask`) 확인
-   b. 의도: "문서 보여주고 질문 답하는 앱"이라는 모호한 원 프롬프트를, 이 파일이 제공하는 구체적 completion criteria로 대체하려는 의도 — lecture-01 예시("Search 기능을 만들어줘" → completion criteria로 구체화)와 동일한 패턴
-   c. Layer: **Task Specification**
+   - 검증: 만들어야 할 4개 feature의 정확한 정의와, evidence 문구에 있는 실제 API 이름(`window.knowledgeBase.qa.ask`) 확인
+   - 의도: "문서 보여주고 질문 답하는 앱"이라는 모호한 원 프롬프트를, 이 파일이 제공하는 구체적 completion criteria로 대체하려는 의도 — lecture-01 예시("Search 기능을 만들어줘" → completion criteria로 구체화)와 동일한 패턴
+   - Layer: **Task Specification**
 
 4. `learn-harness-engineering/projects/project-01/solution/claude-progress.md` 읽음
-   a. 검증: 이전 세션에서 이미 내려진 결정(창 제목 "Knowledge Base", PersistenceService 생성자 주입 등)을 이어받아도 되는지 확인
-   b. 의도: 이미 검증된 결정을 처음부터 다시 고민하지 않고 그대로 채택해서, "매 세션 구조 재탐색" 비용을 줄이려는 의도
-   c. Layer: **State Management**
-   d. 이 시점에 시스템이 같은 폴더의 `CLAUDE.md`를 자동으로 컨텍스트에 띄움(내가 직접 Read한 게 아님)
+   - 검증: 이전 세션에서 이미 내려진 결정(창 제목 "Knowledge Base", PersistenceService 생성자 주입 등)을 이어받아도 되는지 확인
+   - 의도: 이미 검증된 결정을 처음부터 다시 고민하지 않고 그대로 채택해서, "매 세션 구조 재탐색" 비용을 줄이려는 의도
+   - Layer: **State Management**
+   - 이 시점에 시스템이 같은 폴더의 `CLAUDE.md`를 자동으로 컨텍스트에 띄움(내가 직접 Read한 게 아님)
 
 5. `mkdir -p src/{main,preload,renderer/components,services,shared} docs` 시도
-   a. 사용자가 거절함
-   b. 의도 확인 필요: CLAUDE.md를 참고해도 되는지 사용자에게 재확인받는 과정이 필요했음
+   - 사용자가 거절함
+   - 의도 확인 필요: CLAUDE.md를 참고해도 되는지 사용자에게 재확인받는 과정이 필요했음
 
 6. 사용자가 "CLAUDE.md만 추가로 참고해도 된다"고 확답
-   a. 참고 파일 범위를 4개 → 5개로 확정
+   - 참고 파일 범위를 4개 → 5개로 확정
 
 7. `mkdir -p src/{main,preload,renderer/components,services,shared} docs` 재실행
-   a. 근거: AGENTS.md의 4계층 구조(`src/main/`, `src/preload/`, `src/renderer/`, `src/services/`)를 그대로 폴더로 만듦
-   b. Layer: **Context Provision**을 실제 폴더 구조로 옮기는 단계
+   - 근거: AGENTS.md의 4계층 구조(`src/main/`, `src/preload/`, `src/renderer/`, `src/services/`)를 그대로 폴더로 만듦
+   - Layer: **Context Provision**을 실제 폴더 구조로 옮기는 단계
 
 8. `src/shared/types.ts` 작성
-   a. `IPC_CHANNELS` 상수(`documents:list`, `documents:read`, `qa:ask`) 정의
-   b. `DocumentSummary`, `QaAnswer` 타입 정의
-   c. 근거: AGENTS.md "IPC channel names are defined once in `src/shared/types.ts`"
-   d. Layer: **Context Provision** (규칙을 코드로 구현)
+   - `IPC_CHANNELS` 상수(`documents:list`, `documents:read`, `qa:ask`) 정의
+   - `DocumentSummary`, `QaAnswer` 타입 정의
+   - 근거: AGENTS.md "IPC channel names are defined once in `src/shared/types.ts`"
+   - Layer: **Context Provision** (규칙을 코드로 구현)
 
 9. `src/services/persistence-service.ts` 작성
-   a. 생성자에서 `dataDir`, `documents/`, `index/` 세 폴더를 `fs.mkdirSync(..., {recursive:true})`로 생성하는 `ensureDirectories()` 구현
-   b. 근거: feature_list.json의 `data-directory` feature 설명("creates and manages userData/knowledge-base-data directory")을 구현 목표로 삼음
-   c. Layer: **Task Specification**(feature_list.json이 정한 요구사항)을 코드로 충족
+   - 생성자에서 `dataDir`, `documents/`, `index/` 세 폴더를 `fs.mkdirSync(..., {recursive:true})`로 생성하는 `ensureDirectories()` 구현
+   - 근거: feature_list.json의 `data-directory` feature 설명("creates and manages userData/knowledge-base-data directory")을 구현 목표로 삼음
+   - Layer: **Task Specification**(feature_list.json이 정한 요구사항)을 코드로 충족
 
 10. `src/services/document-service.ts` 작성
-    a. `list()` — documents 폴더에서 `.md`/`.txt` 파일만 걸러 이름·크기·수정시각 반환
-    b. `read(id)` — 경로 조작(path traversal) 방지를 위해 `path.dirname(filePath) !== dir`이면 에러 던지게 구현
-    c. 근거: AGENTS.md "Each service receives PersistenceService via constructor injection"
-    d. Layer: **Context Provision**
+    - `list()` — documents 폴더에서 `.md`/`.txt` 파일만 걸러 이름·크기·수정시각 반환
+    - `read(id)` — 경로 조작(path traversal) 방지를 위해 `path.dirname(filePath) !== dir`이면 에러 던지게 구현
+    - 근거: AGENTS.md "Each service receives PersistenceService via constructor injection"
+    - Layer: **Context Provision**
 
 11. `src/services/qa-service.ts` 작성
-    a. 질문을 소문자·단어 단위로 쪼개고 불용어(stopword) 제거
-    b. 문서를 문단 단위로 쪼개서 겹치는 단어 수로 점수 매기고 상위 3개 반환
-    c. 근거: 참고한 5개 파일 어디에도 "LLM을 써라"는 지시가 없어서, task-prompt.md 원문 그대로 로컬 키워드 검색으로 처리
-    d. Layer: **Task Specification**(요구사항 범위를 임의로 확장하지 않음)
+    - 질문을 소문자·단어 단위로 쪼개고 불용어(stopword) 제거
+    - 문서를 문단 단위로 쪼개서 겹치는 단어 수로 점수 매기고 상위 3개 반환
+    - 근거: 참고한 5개 파일 어디에도 "LLM을 써라"는 지시가 없어서, task-prompt.md 원문 그대로 로컬 키워드 검색으로 처리
+    - Layer: **Task Specification**(요구사항 범위를 임의로 확장하지 않음)
 
 12. `src/main/ipc-handlers.ts` 작성
-    a. `IPC_CHANNELS`의 3개 채널에 각각 documentService/qaService 메서드 연결
-    b. 근거: CLAUDE.md 파일-용도 표에서 `src/main/ipc-handlers.ts` = "IPC channel registration"으로 분리돼 있는 구조를 그대로 채택
-    c. Layer: **Context Provision** (CLAUDE.md가 지정한 파일 분리 방식을 그대로 따름)
+    - `IPC_CHANNELS`의 3개 채널에 각각 documentService/qaService 메서드 연결
+    - 근거: CLAUDE.md 파일-용도 표에서 `src/main/ipc-handlers.ts` = "IPC channel registration"으로 분리돼 있는 구조를 그대로 채택
+    - Layer: **Context Provision** (CLAUDE.md가 지정한 파일 분리 방식을 그대로 따름)
 
 13. `src/main/main.ts` 작성
-    a. `BrowserWindow` 1200x800, `contextIsolation: true`, `nodeIntegration: false`, title "Knowledge Base"로 생성
-    b. `app.getPath('userData')/knowledge-base-data`를 데이터 경로로 넘겨 서비스 3개 초기화
-    c. 근거: feature_list.json의 window-launch evidence 수치(1200x800 등) + claude-progress.md의 "창 제목 Knowledge Base" 결정을 그대로 반영
-    d. Layer: **Task Specification**(feature_list.json 수치) + **State Management**(이전 세션 결정 재사용)
+    - `BrowserWindow` 1200x800, `contextIsolation: true`, `nodeIntegration: false`, title "Knowledge Base"로 생성
+    - `app.getPath('userData')/knowledge-base-data`를 데이터 경로로 넘겨 서비스 3개 초기화
+    - 근거: feature_list.json의 window-launch evidence 수치(1200x800 등) + claude-progress.md의 "창 제목 Knowledge Base" 결정을 그대로 반영
+    - Layer: **Task Specification**(feature_list.json 수치) + **State Management**(이전 세션 결정 재사용)
 
 14. `src/preload/preload.ts` 작성
-    a. `contextBridge.exposeInMainWorld('knowledgeBase', {...})`로 `documents.list`, `documents.read`, `qa.ask` 세 개 노출
-    b. 근거: feature_list.json evidence에 있던 API 이름(`window.knowledgeBase.qa.ask`)을 그대로 사용
-    c. Layer: **Task Specification**(정해진 API 계약을 그대로 구현)
+    - `contextBridge.exposeInMainWorld('knowledgeBase', {...})`로 `documents.list`, `documents.read`, `qa.ask` 세 개 노출
+    - 근거: feature_list.json evidence에 있던 API 이름(`window.knowledgeBase.qa.ask`)을 그대로 사용
+    - Layer: **Task Specification**(정해진 API 계약을 그대로 구현)
 
 15. `src/renderer/types.d.ts` 작성
-    a. `window.knowledgeBase` 전역 타입 선언
-    b. 근거: AGENTS.md "Uses the type declarations in types.d.ts"
-    c. Layer: **Context Provision**
+    - `window.knowledgeBase` 전역 타입 선언
+    - 근거: AGENTS.md "Uses the type declarations in types.d.ts"
+    - Layer: **Context Provision**
 
 16. `src/renderer/components/DocumentList.tsx` 작성
-    a. 문서가 0개면 "No documents yet..." 빈 상태 메시지, 있으면 목록 렌더링
-    b. 근거: feature_list.json의 document-list evidence("renders empty state when no documents, shows document cards when data present")를 그대로 구현
-    c. Layer: **Task Specification** + **Verification Feedback**(나중에 이 조건 자체가 검증 기준이 됨)
+    - 문서가 0개면 "No documents yet..." 빈 상태 메시지, 있으면 목록 렌더링
+    - 근거: feature_list.json의 document-list evidence("renders empty state when no documents, shows document cards when data present")를 그대로 구현
+    - Layer: **Task Specification** + **Verification Feedback**(나중에 이 조건 자체가 검증 기준이 됨)
 
 17. `src/renderer/components/QuestionPanel.tsx` 작성
-    a. 텍스트 입력 + Ask 버튼, Enter 키로도 제출되게 `onKeyDown`에서 `event.key === 'Enter'` 체크
-    b. 근거: feature_list.json의 question-panel evidence("submits to window.knowledgeBase.qa.ask on Enter or click")
-    c. Layer: **Task Specification**
+    - 텍스트 입력 + Ask 버튼, Enter 키로도 제출되게 `onKeyDown`에서 `event.key === 'Enter'` 체크
+    - 근거: feature_list.json의 question-panel evidence("submits to window.knowledgeBase.qa.ask on Enter or click")
+    - Layer: **Task Specification**
 
 18. `src/renderer/App.tsx` 작성
-    a. 마운트 시 `window.knowledgeBase.documents.list()` 호출, 문서 클릭 시 `documents.read(id)`로 본문 불러오기
-    b. DocumentList와 QuestionPanel을 좌/우 레이아웃으로 조립
+    - 마운트 시 `window.knowledgeBase.documents.list()` 호출, 문서 클릭 시 `documents.read(id)`로 본문 불러오기
+    - DocumentList와 QuestionPanel을 좌/우 레이아웃으로 조립
 
 19. `src/renderer/main.tsx` 작성
-    a. `createRoot(document.getElementById('root')).render(<App />)`로 React 마운트
+    - `createRoot(document.getElementById('root')).render(<App />)`로 React 마운트
 
 20. `src/renderer/index.html` 작성
-    a. `<div id="root">` + `<script type="module" src="./main.tsx">`
+    - `<div id="root">` + `<script type="module" src="./main.tsx">`
 
 21. `src/renderer/styles.css` 작성
-    a. 좌측 사이드바 220px, 하단 질문패널 280px 고정 높이 등 레이아웃 스타일
+    - 좌측 사이드바 220px, 하단 질문패널 280px 고정 높이 등 레이아웃 스타일
 
 22. `package.json` 작성
-    a. `check`, `build`, `dev`, `start` 스크립트 정의
-    b. electron/react/vite/typescript 등 의존성 명시
-    c. 근거: init.sh가 요구하는 `check`/`build` 스크립트 이름, CLAUDE.md의 `npm run dev`(scripts/dev.js 경유) 이름을 그대로 맞춤
-    d. Layer: **Execution Environment**
+    - `check`, `build`, `dev`, `start` 스크립트 정의
+    - electron/react/vite/typescript 등 의존성 명시
+    - 근거: init.sh가 요구하는 `check`/`build` 스크립트 이름, CLAUDE.md의 `npm run dev`(scripts/dev.js 경유) 이름을 그대로 맞춤
+    - Layer: **Execution Environment**
 
 23. `tsconfig.json` 작성 — 렌더러용 (strict, jsx: react-jsx, noEmit)
-    a. Layer: **Execution Environment**
+    - Layer: **Execution Environment**
 
 24. `tsconfig.node.json` 작성 — main/preload/services용 (module: CommonJS, outDir: dist)
-    a. Layer: **Execution Environment**
+    - Layer: **Execution Environment**
 
 25. `vite.config.ts` 작성 — 렌더러를 `dist/renderer`로 빌드하도록 설정
-    a. Layer: **Execution Environment**
+    - Layer: **Execution Environment**
 
 26. `mkdir -p scripts`
 
 27. `scripts/dev.js` 작성
-    a. `execSync('npm run build')` 후 `spawn(electron, ['.'])`로 실행
-    b. 근거: CLAUDE.md "npm run dev # Build + launch Electron (via scripts/dev.js)"
-    c. Layer: **Context Provision**(CLAUDE.md 지시) + **Execution Environment**(실제 실행 스크립트)
+    - `execSync('npm run build')` 후 `spawn(electron, ['.'])`로 실행
+    - 근거: CLAUDE.md "npm run dev # Build + launch Electron (via scripts/dev.js)"
+    - Layer: **Context Provision**(CLAUDE.md 지시) + **Execution Environment**(실제 실행 스크립트)
 
 28. `init.sh` 작성 — 원본 그대로 복사
-    a. 근거: 하니스 파일 자체이므로 새 solution 위치에도 있어야 `bash init.sh`가 여기서도 그대로 동작함
-    b. Layer: **Execution Environment** + **State Management**(다음 세션도 같은 하니스를 쓸 수 있게 남겨둠)
+    - 근거: 하니스 파일 자체이므로 새 solution 위치에도 있어야 `bash init.sh`가 여기서도 그대로 동작함
+    - Layer: **Execution Environment** + **State Management**(다음 세션도 같은 하니스를 쓸 수 있게 남겨둠)
 
 29. `chmod +x init.sh`
 
 30. `AGENTS.md` 작성 — 원본 그대로 복사
-    a. 근거: 규칙 파일이므로 새 위치에도 남겨서 다음 세션이 다시 읽을 수 있게 함
-    b. Layer: **State Management**(규칙을 다음 세션으로 이어지게 함)
+    - 근거: 규칙 파일이므로 새 위치에도 남겨서 다음 세션이 다시 읽을 수 있게 함
+    - Layer: **State Management**(규칙을 다음 세션으로 이어지게 함)
 
 31. `CLAUDE.md` 작성 — 원본 그대로 복사 (사용자가 참고 허용해서 하니스 파일로 같이 이동시킴)
-    a. Layer: **State Management**
+    - Layer: **State Management**
 
 32. `docs/ARCHITECTURE.md` 작성
-    a. 내가 실제로 만든 4계층 구조를 직접 서술 (참고 저장소의 원본 docs/ARCHITECTURE.md는 안 읽었으므로 새로 씀)
-    b. 근거: AGENTS.md Startup Rules 2번이 이 파일의 존재를 전제로 함
-    c. Layer: **Context Provision**(다음 세션을 위한 문서화)
+    - 내가 실제로 만든 4계층 구조를 직접 서술 (참고 저장소의 원본 docs/ARCHITECTURE.md는 안 읽었으므로 새로 씀)
+    - 근거: AGENTS.md Startup Rules 2번이 이 파일의 존재를 전제로 함
+    - Layer: **Context Provision**(다음 세션을 위한 문서화)
 
 33. `docs/PRODUCT.md` 작성
-    a. task-prompt.md 원문 + 4개 feature 요약 + "범위 밖(파일 업로드 UI, LLM 답변 등)" 명시, 직접 서술
-    b. Layer: **Task Specification**(요구사항 범위를 문서로 고정)
+    - task-prompt.md 원문 + 4개 feature 요약 + "범위 밖(파일 업로드 UI, LLM 답변 등)" 명시, 직접 서술
+    - Layer: **Task Specification**(요구사항 범위를 문서로 고정)
 
 34. `npm install`
-    a. 검증: package.json에 적은 의존성이 실제로 설치되는지 확인
-    b. 결과: 134개 패키지 설치됨 (3 vulnerabilities는 경고 수준, 무시)
-    c. Layer: **Execution Environment**
+    - 검증: package.json에 적은 의존성이 실제로 설치되는지 확인
+    - 결과: 134개 패키지 설치됨 (3 vulnerabilities는 경고 수준, 무시)
+    - Layer: **Execution Environment**
 
 35. `npm run check`
-    a. 검증: AGENTS.md Definition of Done 1번("TypeScript compiles without errors") 통과 여부 확인
-    b. 결과: 에러 출력 없음 → 통과
-    c. Layer: **Verification Feedback**
+    - 검증: AGENTS.md Definition of Done 1번("TypeScript compiles without errors") 통과 여부 확인
+    - 결과: 에러 출력 없음 → 통과
+    - Layer: **Verification Feedback**
 
 36. `npm run build`
-    a. 검증: init.sh의 build 단계(`tsc -p tsconfig.node.json && vite build`)가 실제로 성공하는지 확인
-    b. 결과: `33 modules transformed`, `dist/renderer/index.html`, `assets/index-*.js` 등 정상 생성 → 통과
-    c. Layer: **Verification Feedback**
+    - 검증: init.sh의 build 단계(`tsc -p tsconfig.node.json && vite build`)가 실제로 성공하는지 확인
+    - 결과: `33 modules transformed`, `dist/renderer/index.html`, `assets/index-*.js` 등 정상 생성 → 통과
+    - Layer: **Verification Feedback**
 
 37. `find dist -maxdepth 3`
-    a. 검증: `main.ts`에서 기대한 상대경로(`../preload/preload.js`, `../renderer/index.html`)가 빌드 결과물과 실제로 맞는지 파일 트리로 직접 확인
-    b. 결과: `dist/main/main.js`, `dist/preload/preload.js`, `dist/services/*.js`, `dist/renderer/index.html` 등 예상한 구조와 일치
-    c. Layer: **Verification Feedback**
+    - 검증: `main.ts`에서 기대한 상대경로(`../preload/preload.js`, `../renderer/index.html`)가 빌드 결과물과 실제로 맞는지 파일 트리로 직접 확인
+    - 결과: `dist/main/main.js`, `dist/preload/preload.js`, `dist/services/*.js`, `dist/renderer/index.html` 등 예상한 구조와 일치
+    - Layer: **Verification Feedback**
 
 38. `(env -u ELECTRON_RUN_AS_NODE npx electron . > /tmp/electron-solution-run.log 2>&1 &) ; sleep 4; pkill ...; cat 로그`
-    a. 검증: AGENTS.md Definition of Done 2번("The app launches and the window is visible") 1차 확인 시도
-    b. 결과: 로그가 비어있음 — 에러는 없었지만, 창이 진짜 떴는지 프로세스 단위로는 확신이 안 서서 재검증하기로 함
-    c. Layer: **Verification Feedback**
+    - 검증: AGENTS.md Definition of Done 2번("The app launches and the window is visible") 1차 확인 시도
+    - 결과: 로그가 비어있음 — 에러는 없었지만, 창이 진짜 떴는지 프로세스 단위로는 확신이 안 서서 재검증하기로 함
+    - Layer: **Verification Feedback**
 
 39. `(env -u ELECTRON_RUN_AS_NODE npx electron . ...) ; sleep 2; ps aux | grep Electron.app; sleep 2; pkill ...; cat 로그`
-    a. 검증: 38번을 더 확실히 하기 위해, 죽이기 전에 `ps aux`로 실제 프로세스 목록을 확보
-    b. 결과: main 프로세스 + Renderer 헬퍼 + GPU 헬퍼 + network 헬퍼까지 전부 살아있는 걸 확인 → 창이 실제로 정상 기동했다는 확실한 증거
-    c. 로그에 남은 `GPU process exited unexpectedly`, `Network service crashed` 메시지는 내가 `pkill`로 강제 종료해서 생긴 부수 효과지, 앱 자체 에러가 아니라고 판단
-    d. Layer: **Verification Feedback**
+    - 검증: 38번을 더 확실히 하기 위해, 죽이기 전에 `ps aux`로 실제 프로세스 목록을 확보
+    - 결과: main 프로세스 + Renderer 헬퍼 + GPU 헬퍼 + network 헬퍼까지 전부 살아있는 걸 확인 → 창이 실제로 정상 기동했다는 확실한 증거
+    - 로그에 남은 `GPU process exited unexpectedly`, `Network service crashed` 메시지는 내가 `pkill`로 강제 종료해서 생긴 부수 효과지, 앱 자체 에러가 아니라고 판단
+    - Layer: **Verification Feedback**
 
 40. `find "/Users/ellahwang/Library/Application Support/knowledge-base/knowledge-base-data"`
-    a. 검증: `data-directory` feature가 실제로 폴더를 만드는지 파일시스템에서 직접 확인
-    b. 결과: `documents/`, `index/` 하위 폴더까지 생성된 것 확인
-    c. Layer: **Verification Feedback**
+    - 검증: `data-directory` feature가 실제로 폴더를 만드는지 파일시스템에서 직접 확인
+    - 결과: `documents/`, `index/` 하위 폴더까지 생성된 것 확인
+    - Layer: **Verification Feedback**
 
 41. `cat > .../documents/welcome.md << EOF ... EOF` + `node -e "...PersistenceService(DATA_DIR.replace('/knowledge-base-data',''))..."`
-    a. 검증: `document-list`/`question-panel`의 실제 로직(서비스 계층)을 GUI 없이 직접 호출해서 확인하려던 1차 시도
-    b. 결과: `documents: []`, `answers: []` — 빈 배열이 나와서 실패. 경로에 불필요한 `.replace(...)`를 넣어서 `PersistenceService`가 엉뚱한 폴더를 보고 있었던 게 원인
-    c. Layer: **Verification Feedback**
+    - 검증: `document-list`/`question-panel`의 실제 로직(서비스 계층)을 GUI 없이 직접 호출해서 확인하려던 1차 시도
+    - 결과: `documents: []`, `answers: []` — 빈 배열이 나와서 실패. 경로에 불필요한 `.replace(...)`를 넣어서 `PersistenceService`가 엉뚱한 폴더를 보고 있었던 게 원인
+    - Layer: **Verification Feedback**
 
 42. `node -e "...PersistenceService(process.argv[1])..." "$DATA_DIR"`
-    a. 검증: 41번의 원인(잘못된 경로 조합)을 고치고 재확인
-    b. 결과: `documents.list()`가 방금 넣은 `welcome.md`를 정확히 반환, `qa.ask(...)`도 관련 문단 2개를 점수순(2점, 1점)으로 정확히 반환 → 서비스 로직 정상 동작 확인
-    c. Layer: **Verification Feedback**
+    - 검증: 41번의 원인(잘못된 경로 조합)을 고치고 재확인
+    - 결과: `documents.list()`가 방금 넣은 `welcome.md`를 정확히 반환, `qa.ask(...)`도 관련 문단 2개를 점수순(2점, 1점)으로 정확히 반환 → 서비스 로직 정상 동작 확인
+    - Layer: **Verification Feedback**
 
 43. `rm -f ".../documents/welcome.md"`
-    a. 검증용으로 넣었던 샘플 파일 제거 — feature_list.json이 요구하는 "기본은 빈 상태(empty state)"를 지키기 위해
-    b. Layer: **Verification Feedback**(테스트 부산물 정리)
+    - 검증용으로 넣었던 샘플 파일 제거 — feature_list.json이 요구하는 "기본은 빈 상태(empty state)"를 지키기 위해
+    - Layer: **Verification Feedback**(테스트 부산물 정리)
 
 44. `feature_list.json` 작성 (갱신)
-    a. 4개 feature 전부 `status: pass`로 갱신, evidence에 34~42번에서 실제로 확인한 내용을 그대로 기록, `testedAt`은 실제 검증 시각
-    b. 근거: AGENTS.md "Working with the Feature List" — 기능 구현 시 evidence와 함께 pass로 갱신하라는 규칙
-    c. Layer: **State Management** + **Verification Feedback**
+    - 4개 feature 전부 `status: pass`로 갱신, evidence에 34~42번에서 실제로 확인한 내용을 그대로 기록, `testedAt`은 실제 검증 시각
+    - 근거: AGENTS.md "Working with the Feature List" — 기능 구현 시 evidence와 함께 pass로 갱신하라는 규칙
+    - Layer: **State Management** + **Verification Feedback**
 
 45. `claude-progress.md` 작성
-    a. 이번 세션에서 한 일, 참고한 5개 파일, 내린 결정, 겪은 이슈(ELECTRON_RUN_AS_NODE), starter(약한 하니스) 실행과의 비교를 세션 로그 형식으로 기록
-    b. 근거: 참고 파일 5번(claude-progress.md)과 같은 세션 로그 형식을 유지하기 위해
-    c. Layer: **State Management**
+    - 이번 세션에서 한 일, 참고한 5개 파일, 내린 결정, 겪은 이슈(ELECTRON_RUN_AS_NODE), starter(약한 하니스) 실행과의 비교를 세션 로그 형식으로 기록
+    - 근거: 참고 파일 5번(claude-progress.md)과 같은 세션 로그 형식을 유지하기 위해
+    - Layer: **State Management**
 
 46. `find . -maxdepth 4 -not -path '*/node_modules/*' -not -path '*/.git/*' -not -path '*/dist/*' | sort`
-    a. 검증: 최종적으로 계획한 파일 구조가 전부 실제로 존재하는지 통째로 확인
-    b. 결과: AGENTS.md/CLAUDE.md/claude-progress.md/feature_list.json/init.sh/docs/src/설정 파일까지 계획한 그대로 존재함을 확인
-    c. Layer: **Verification Feedback**
+    - 검증: 최종적으로 계획한 파일 구조가 전부 실제로 존재하는지 통째로 확인
+    - 결과: AGENTS.md/CLAUDE.md/claude-progress.md/feature_list.json/init.sh/docs/src/설정 파일까지 계획한 그대로 존재함을 확인
+    - Layer: **Verification Feedback**
 
 
 ### `lecture-01`의 다섯 개 Layer로 정리
