@@ -1,0 +1,12 @@
+{
+  "name": "document-qa",
+  "version": "1.0.0",
+  "description": "Electron app that shows documents and answers questions about them",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "devDependencies": {
+    "electron": "^31.0.0"
+  }
+}
